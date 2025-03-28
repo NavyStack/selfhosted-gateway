@@ -1,29 +1,26 @@
 #!/bin/sh
 set -euxo pipefail
 
-echo $GATEWAY_CLIENT_WG_PRIVKEY > /etc/wireguard/link0.key
+# Set the interface name from environment variable or default to "link0"
+INTERFACE_NAME=${INTERFACE_NAME:-link0}
 
+echo $GATEWAY_CLIENT_WG_PRIVKEY > /etc/wireguard/${INTERFACE_NAME}.key
 cleanupLink() {
-    if ip link show link0 > /dev/null 2>&1; then
-        ip link delete link0
+    if ip link show ${INTERFACE_NAME} > /dev/null 2>&1; then
+        ip link delete ${INTERFACE_NAME}
     fi
 }
-
-if ! ip link show link0 > /dev/null 2>&1; then
+if ! ip link show ${INTERFACE_NAME} > /dev/null 2>&1; then
     trap cleanupLink EXIT
-    ip link add link0 type wireguard
+    ip link add ${INTERFACE_NAME} type wireguard
 fi
-
-wg set link0 private-key /etc/wireguard/link0.key
-wg set link0 listen-port 18521
-ip addr add 10.0.0.2/24 dev link0
-ip link set link0 up
-ip link set link0 mtu $LINK_MTU
-
-wg set link0 peer $GATEWAY_LINK_WG_PUBKEY allowed-ips 10.0.0.1/32 persistent-keepalive 30 endpoint $GATEWAY_ENDPOINT
-
+wg set ${INTERFACE_NAME} private-key /etc/wireguard/${INTERFACE_NAME}.key
+wg set ${INTERFACE_NAME} listen-port 18521
+ip addr add 10.0.0.2/24 dev ${INTERFACE_NAME}
+ip link set ${INTERFACE_NAME} up
+ip link set ${INTERFACE_NAME} mtu $LINK_MTU
+wg set ${INTERFACE_NAME} peer $GATEWAY_LINK_WG_PUBKEY allowed-ips 10.0.0.1/32 persistent-keepalive 30 endpoint $GATEWAY_ENDPOINT
 if [ -z ${FORWARD_ONLY+x} ]; then
-
     echo "Using caddy with SSL termination to forward traffic to app."
     if [ ! -z ${CADDY_TLS_PROXY+x} ]; then          # if CADDY_TLS_PROXY is set
         echo "Configure Caddy for use with TLS backend"
@@ -40,7 +37,6 @@ $EXPOSE {
        }
 END
 )
-
         else    # CADDY_TLS_INSECURE is false
             EXPOSE=$(cat <<-END
 $EXPOSE {
@@ -61,7 +57,6 @@ $EXPOSE {
 END
 )
     fi
-
     CADDYFILE='/etc/Caddyfile'
     BASIC_AUTH=${BASIC_AUTH:-}
     BASIC_AUTH_CONFIG=${BASIC_AUTH_CONFIG:-}

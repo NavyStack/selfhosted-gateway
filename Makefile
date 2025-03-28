@@ -1,12 +1,13 @@
 .PHONY: docker link setup gateway ci
 
 GATEWAY_NETWORK=gateway
+CONTEXT=default
 
 docker:
-	docker build -t fractalnetworks/selfhosted-gateway:latest ./src/gateway/
-	docker build -t fractalnetworks/gateway-link:latest ./src/gateway-link/
-	docker build -t fractalnetworks/gateway-client:latest ./src/client-link/
-	docker build -t fractalnetworks/gateway-cli:latest ./src/create-link/
+	docker -c $(CONTEXT) build -t fractalnetworks/selfhosted-gateway:latest ./src/gateway/
+	docker -c $(CONTEXT) build -t fractalnetworks/gateway-link:latest ./src/gateway-link/
+	docker -c $(CONTEXT) build -t fractalnetworks/gateway-client:latest ./src/client-link/
+	docker -c $(CONTEXT) build -t fractalnetworks/gateway-cli:latest ./src/create-link/
 
 setup:
 	docker network create $(GATEWAY_NETWORK)

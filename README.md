@@ -61,6 +61,13 @@ foo@gateway:~/selfhosted-gateway$ make setup
 foo@gateway:~/selfhosted-gateway$ make gateway
 ```
 #### Client
+
+Check whether the SSH agent is running `eval "$(ssh-agent -s)"`
+
+Check whether the key is also available `ssh-add -L`
+
+If this is missing, it can be added with `ssh-add /root/.ssh/ed25519`
+
 3. To generate a `link` docker compose snippet run the following commands from the `client`:
 ```console
 foo@local:~$ git clone ... && cd selfhosted-gateway
